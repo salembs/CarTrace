@@ -1,6 +1,6 @@
 # CarTrace 🔗
 
-> Blockchain-powered vehicle history platform
+> Blockchain-Powered Vehicle History Platform
 
 A decentralized web platform that stores and secures tamper-proof vehicle modification histories on the blockchain. Every repair, maintenance, inspection, and part replacement is recorded permanently and publicly accessible by VIN.
 
