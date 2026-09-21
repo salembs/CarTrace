@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CarTrace: Vehicle History</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { padding-top: 64px; min-height: 100vh; background: var(--bg); }
+    main { max-width: 860px; margin: 0 auto; padding: 48px 24px 80px; }
+
+    /* Search bar at top */
+    .top-search { display: flex; gap: 12px; margin-bottom: 40px; }
+    .top-search .form-control { font-family: var(--font-head); letter-spacing: 2px; text-transform: uppercase; font-size: 13px; }
+    .top-search .btn { flex-shrink: 0; }
+
+    /* Vehicle identity card */
+    .vehicle-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-hi);
+      border-radius: var(--r-lg);
+      padding: 32px;
+      margin-bottom: 32px;
+      box-shadow: 0 0 60px rgba(0,212,255,0.06), inset 0 1px 0 rgba(0,212,255,0.08);
+      animation: fadeInUp 0.4s ease;
+    }
+    .vehicle-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
+    .vehicle-name { font-family: var(--font-head); font-size: 26px; font-weight: 700; letter-spacing: 1px; margin-bottom: 4px; }
+    .vehicle-vin { font-family: var(--font-head); font-size: 12px; letter-spacing: 3px; color: var(--cyan); }
+    .vehicle-meta {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 16px;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+    }
+    .meta-item {}
+    .meta-label { font-family: var(--font-head); font-size: 8px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+    .meta-value { font-size: 14px; font-weight: 500; color: var(--white); }
+
+    /* Trust score */
+    .trust-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 24px 28px;
+      margin-bottom: 32px;
+      animation: fadeInUp 0.4s ease 0.1s both;
+    }
+    .trust-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .trust-title { font-family: var(--font-head); font-size: 11px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+    .trust-score-val { font-family: var(--font-head); font-size: 28px; font-weight: 700; }
+    .trust-factors { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+    .trust-factor { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+    .trust-factor.good { color: var(--success); }
+    .trust-factor.bad { color: var(--danger); }
+
+    /* Blockchain verified banner */
+    .verified-banner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(0,230,118,0.05);
+      border: 1px solid rgba(0,230,118,0.2);
+      border-radius: var(--r);
+      padding: 14px 20px;
+      margin-bottom: 32px;
+      font-size: 13px;
+      color: var(--success);
+      font-family: var(--font-head);
+      letter-spacing: 0.5px;
+      animation: fadeInUp 0.4s ease 0.2s both;
+    }
+
+    /* Timeline */
+    .timeline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      animation: fadeInUp 0.4s ease 0.3s both;
+    }
+    .timeline-title { font-family: var(--font-head); font-size: 14px; letter-spacing: 1px; }
+    .record-count { font-size: 13px; color: var(--muted); }
+
+    .rec-header { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+    .rec-title { font-weight: 600; font-size: 15px; }
+    .rec-org { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+    .rec-desc { color: var(--muted); font-size: 14px; margin-bottom: 10px; line-height: 1.6; }
+    .rec-meta { display: flex; flex-wrap: wrap; gap: 16px; font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+    .rec-meta span { display: flex; align-items: center; gap: 5px; }
+    .rec-parts { font-size: 12px; color: var(--cyan); background: var(--cyan-dim); padding: 5px 10px; border-radius: 4px; display: inline-block; margin-bottom: 10px; }
+
+    /* Empty / error states */
+    .state-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 64px 32px;
+      text-align: center;
+    }
+    .state-icon { font-size: 48px; margin-bottom: 20px; }
+    .state-title { font-family: var(--font-head); font-size: 18px; margin-bottom: 10px; }
+    .state-desc { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+
+    /* Loading skeleton */
+    .skeleton {
+      background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-elev) 50%, var(--bg-card) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 6px;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <a href="/" class="navbar-logo">
+    <span class="logo-dot"></span>
+    CarTrace
+  </a>
+  <div class="navbar-links">
+    <a href="/">Home</a>
+    <a href="/admin/login.html" class="nav-admin-btn">Admin Portal</a>
+  </div>
+</nav>
+
+<main>
+  <!-- Search bar -->
+  <div class="top-search">
+    <input type="text" class="form-control scan-wrap" id="vinInput"
+      placeholder="Search another VIN..." maxlength="17" autocomplete="off">
+    <button class="btn btn-primary" id="searchBtn">Search</button>
+  </div>
+
+  <!-- Main content injected by JS -->
+  <div id="content">
+    <div style="text-align:center;padding:80px 0;">
+      <div class="spinner"></div>
+      <p style="margin-top:16px;color:var(--muted);font-size:14px;">Loading blockchain data...</p>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.11.1/dist/ethers.umd.min.js"></script>
+<script src="/js/contract-address.js"></script>
+<script src="/js/blockchain.js"></script>
+<script src="/js/vehicle.js"></script>
+</body>
+</html>

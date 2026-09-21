@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CarTrace: Admin Dashboard</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .wallet-bar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 20px;
+      border-radius: var(--r);
+      margin-bottom: 28px;
+      font-size: 14px;
+    }
+    .wallet-bar.not-connected { background: rgba(255,179,0,0.07); border: 1px solid rgba(255,179,0,0.3); color: var(--warning); }
+    .wallet-bar.authorized    { background: rgba(0,230,118,0.07); border: 1px solid rgba(0,230,118,0.3); color: var(--success); }
+    .wallet-bar.not-authorized{ background: rgba(255,68,68,0.07); border: 1px solid rgba(255,68,68,0.3); color: var(--danger); }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .action-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 28px;
+      cursor: pointer;
+      text-decoration: none;
+      display: block;
+      transition: all 0.25s;
+    }
+    .action-card:hover {
+      border-color: var(--border-hi);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3), 0 0 20px rgba(0,212,255,0.06);
+    }
+    .action-icon { font-size: 28px; margin-bottom: 14px; }
+    .action-title { font-family: var(--font-head); font-size: 13px; letter-spacing: 1px; margin-bottom: 6px; }
+    .action-desc { color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th { font-family: var(--font-head); font-size: 9px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; padding: 10px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+    td { padding: 14px 16px; font-size: 14px; border-bottom: 1px solid var(--border); color: var(--muted); }
+    td:first-child { font-family: var(--font-head); font-size: 12px; letter-spacing: 1px; color: var(--white); }
+    tr:last-child td { border-bottom: none; }
+
+    .admin-wallet-addr { font-family: var(--font-head); font-size: 11px; letter-spacing: 1px; color: var(--cyan); }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <a href="/" class="navbar-logo">
+    <span class="logo-dot"></span>
+    CarTrace
+  </a>
+  <div class="navbar-links">
+    <span id="adminNameDisplay" style="color:var(--muted);font-size:13px;"></span>
+    <span id="walletDisplay" class="admin-wallet-addr"></span>
+    <a href="/" target="_blank">Public Site</a>
+    <button class="btn btn-danger-outline" id="logoutBtn" style="padding:8px 16px;font-size:11px;">Logout</button>
+  </div>
+</nav>
+
+<div class="admin-layout">
+  <!-- Sidebar -->
+  <aside class="admin-sidebar">
+    <div style="padding:0 24px 16px;">
+      <div style="font-family:var(--font-head);font-size:10px;letter-spacing:2px;color:var(--muted);">ADMIN PANEL</div>
+    </div>
+    <div class="sidebar-section-label">Navigation</div>
+    <a class="sidebar-link active" href="/admin/dashboard.html">⊞ Dashboard</a>
+    <a class="sidebar-link" href="/admin/register-vehicle.html">＋ Register Vehicle</a>
+    <a class="sidebar-link" href="/admin/add-record.html">✎ Add Record</a>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section-label">Public</div>
+    <a class="sidebar-link" href="/" target="_blank">⤤ Public Site</a>
+  </aside>
+
+  <!-- Main -->
+  <main class="admin-main">
+    <div style="margin-bottom:32px;" class="fade-in-up">
+      <div class="section-label">Overview</div>
+      <h1 class="section-title">Dashboard</h1>
+      <p class="section-subtitle">Welcome back, <span id="orgName" style="color:var(--white);">—</span></p>
+    </div>
+
+    <!-- Wallet status bar -->
+    <div id="walletBar" class="wallet-bar not-connected fade-in-up-delay-1">
+      <span>⚡</span>
+      <span id="walletMsg">Connect your MetaMask wallet to submit records.</span>
+      <button class="btn btn-outline" id="connectWalletBtn" style="margin-left:auto;padding:8px 16px;font-size:10px;">Connect Wallet</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row fade-in-up-delay-2">
+      <div class="stat-card">
+        <div class="stat-value" id="statVehicles">—</div>
+        <div class="stat-label">Total Vehicles</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statRecords">—</div>
+        <div class="stat-label">Total Records</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statWalletStatus" style="font-size:20px;">—</div>
+        <div class="stat-label">Wallet Status</div>
+      </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="fade-in-up-delay-2" style="margin-bottom:8px;">
+      <div class="section-label">Actions</div>
+    </div>
+    <div class="quick-actions fade-in-up-delay-3">
+      <a class="action-card" href="/admin/register-vehicle.html">
+        <div class="action-icon">🚗</div>
+        <div class="action-title">Register New Vehicle</div>
+        <p class="action-desc">Add a new vehicle to the blockchain by providing VIN, make, model, year, and color.</p>
+      </a>
+      <a class="action-card" href="/admin/add-record.html">
+        <div class="action-icon">📋</div>
+        <div class="action-title">Add History Record</div>
+        <p class="action-desc">Log a repair, maintenance, inspection, accident, or part replacement for any registered vehicle.</p>
+      </a>
+    </div>
+
+    <!-- Demo VINs -->
+    <div class="card fade-in-up-delay-3">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+        <div class="section-label" style="margin:0;">Demo Vehicles</div>
+        <span style="font-size:12px;color:var(--muted);">Pre-seeded for testing</span>
+      </div>
+      <table id="demoTable">
+        <thead>
+          <tr>
+            <th>VIN</th>
+            <th>Vehicle</th>
+            <th>Records</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="demoBody">
+          <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px;">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.11.1/dist/ethers.umd.min.js"></script>
+<script src="/js/contract-address.js"></script>
+<script src="/js/blockchain.js"></script>
+<script src="/js/admin-dashboard.js"></script>
+</body>
+</html>

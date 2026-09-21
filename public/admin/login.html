@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CarTrace: Admin Login</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background:
+        radial-gradient(ellipse 70% 50% at 50% 50%, rgba(0,212,255,0.05) 0%, transparent 70%),
+        var(--bg);
+      padding: 24px;
+    }
+    .login-card {
+      width: 100%;
+      max-width: 440px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-hi);
+      border-radius: var(--r-lg);
+      padding: 48px 40px;
+      box-shadow: 0 0 80px rgba(0,212,255,0.07);
+      animation: fadeInUp 0.5s ease;
+    }
+    .login-logo {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .login-logo-title {
+      font-family: var(--font-head);
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    .login-logo-sub {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: var(--font-head);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .form-stack { display: flex; flex-direction: column; gap: 20px; }
+    .login-btn { width: 100%; padding: 15px; font-size: 13px; letter-spacing: 2px; margin-top: 8px; }
+    .login-hint {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .error-msg {
+      display: none;
+      padding: 12px 16px;
+      background: rgba(255,68,68,0.07);
+      border: 1px solid rgba(255,68,68,0.3);
+      border-radius: var(--r);
+      color: var(--danger);
+      font-size: 13px;
+    }
+    .back-link {
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .back-link a { color: var(--cyan); }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-title">
+        <span class="logo-dot"></span>
+        CarTrace
+      </div>
+      <div class="login-logo-sub">Admin Portal</div>
+    </div>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <div class="form-stack">
+      <div class="form-group">
+        <label class="form-label" for="username">Username</label>
+        <input type="text" class="form-control" id="username" placeholder="Enter your username" autocomplete="username" autocorrect="off" autocapitalize="none">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <input type="password" class="form-control" id="password" placeholder="Enter your password" autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary login-btn" id="loginBtn">
+        <span id="loginBtnText">Login</span>
+      </button>
+    </div>
+
+    <div class="login-hint">
+      Don't have an account? Contact the system administrator.
+    </div>
+  </div>
+  <div class="back-link"><a href="/">← Back to public site</a></div>
+
+<script src="/js/admin-login.js"></script>
+</body>
+</html>

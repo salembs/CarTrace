@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CarTrace: Add Record</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .vin-lookup-row { display: flex; gap: 12px; align-items: flex-end; }
+    .vin-lookup-row .form-group { flex: 1; }
+
+    .vehicle-found-card {
+      display: none;
+      background: var(--bg-elev);
+      border: 1px solid rgba(0,230,118,0.25);
+      border-radius: var(--r);
+      padding: 14px 18px;
+      margin-top: 12px;
+      display: none;
+      align-items: center;
+      gap: 16px;
+    }
+    .vehicle-found-card.visible { display: flex; }
+    .vehicle-info { flex: 1; }
+    .vehicle-info-name { font-family: var(--font-head); font-size: 13px; color: var(--white); margin-bottom: 2px; }
+    .vehicle-info-vin { font-size: 11px; color: var(--muted); }
+
+    .record-type-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .type-option { display: none; }
+    .type-label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 14px 8px;
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      cursor: pointer;
+      font-family: var(--font-head);
+      font-size: 9px;
+      letter-spacing: 1px;
+      color: var(--muted);
+      text-transform: uppercase;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .type-label:hover { border-color: var(--border-hi); color: var(--white); }
+    .type-option:checked + .type-label { border-color: var(--cyan); color: var(--cyan); background: var(--cyan-dim); }
+    .type-label .type-icon { font-size: 20px; }
+
+    .char-counter { text-align: right; font-size: 11px; color: var(--muted); font-family: var(--font-head); margin-top: 4px; }
+
+    .result-card {
+      display: none;
+      background: var(--bg-card);
+      border: 1px solid rgba(0,230,118,0.3);
+      border-radius: var(--r-lg);
+      padding: 32px;
+      text-align: center;
+      margin-top: 24px;
+    }
+    .result-card.error { border-color: rgba(255,68,68,0.3); }
+    .result-icon { font-size: 40px; margin-bottom: 16px; }
+    .result-title { font-family: var(--font-head); font-size: 16px; margin-bottom: 10px; }
+    .result-tx {
+      font-family: var(--font-head); font-size: 11px; letter-spacing: 1px;
+      color: var(--cyan); background: var(--bg-elev); padding: 8px 14px;
+      border-radius: 6px; word-break: break-all; margin: 12px 0; display: inline-block;
+    }
+
+    @media (max-width: 640px) {
+      .record-type-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+<body>
+<nav class="navbar">
+  <a href="/" class="navbar-logo"><span class="logo-dot"></span>CarTrace</a>
+  <div class="navbar-links">
+    <span id="adminNameDisplay" style="color:var(--muted);font-size:13px;"></span>
+    <button class="btn btn-danger-outline" id="logoutBtn" style="padding:8px 16px;font-size:11px;">Logout</button>
+  </div>
+</nav>
+
+<div class="admin-layout">
+  <aside class="admin-sidebar">
+    <div style="padding:0 24px 16px;">
+      <div style="font-family:var(--font-head);font-size:10px;letter-spacing:2px;color:var(--muted);">ADMIN PANEL</div>
+    </div>
+    <div class="sidebar-section-label">Navigation</div>
+    <a class="sidebar-link" href="/admin/dashboard.html">⊞ Dashboard</a>
+    <a class="sidebar-link" href="/admin/register-vehicle.html">＋ Register Vehicle</a>
+    <a class="sidebar-link active" href="/admin/add-record.html">✎ Add Record</a>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section-label">Public</div>
+    <a class="sidebar-link" href="/" target="_blank">⤤ Public Site</a>
+  </aside>
+
+  <main class="admin-main">
+    <div style="margin-bottom:32px;" class="fade-in-up">
+      <div class="section-label">Blockchain</div>
+      <h1 class="section-title">Add History Record</h1>
+      <p class="section-subtitle">Permanently record an intervention on an existing vehicle. Cannot be deleted or edited after submission.</p>
+    </div>
+
+    <!-- Wallet warning -->
+    <div id="walletWarning" class="alert alert-warning" style="margin-bottom:24px;">
+      ⚡ Connect your MetaMask wallet to submit records.
+      <button class="btn btn-outline" id="connectWalletBtn" style="margin-left:auto;padding:7px 14px;font-size:10px;">Connect Wallet</button>
+    </div>
+
+    <div class="card-glow fade-in-up-delay-1" style="display:flex;flex-direction:column;gap:24px;">
+
+      <!-- VIN Lookup -->
+      <div class="form-group">
+        <label class="form-label">Vehicle VIN <span style="color:var(--danger);">*</span></label>
+        <div class="vin-lookup-row">
+          <div class="form-group" style="margin:0;">
+            <input type="text" class="form-control scan-wrap" id="vin"
+              placeholder="Enter 17-character VIN" maxlength="17"
+              autocomplete="off" spellcheck="false">
+          </div>
+          <button class="btn btn-outline" id="lookupBtn" style="flex-shrink:0;padding:12px 20px;font-size:11px;">
+            <span id="lookupText">Lookup</span>
+          </button>
+        </div>
+        <!-- Vehicle found display -->
+        <div class="vehicle-found-card" id="vehicleFound">
+          <span style="font-size:24px;">🚗</span>
+          <div class="vehicle-info">
+            <div class="vehicle-info-name" id="vehicleName">—</div>
+            <div class="vehicle-info-vin" id="vehicleVin">—</div>
+          </div>
+          <div class="badge badge-success">✓ Found</div>
+        </div>
+        <div id="vinError" style="color:var(--danger);font-size:12px;margin-top:6px;font-family:var(--font-head);letter-spacing:1px;"></div>
+      </div>
+
+      <!-- Record Type -->
+      <div class="form-group">
+        <label class="form-label">Record Type <span style="color:var(--danger);">*</span></label>
+        <div class="record-type-grid">
+          <div>
+            <input type="radio" name="recordType" id="t-repair" value="Repair" class="type-option">
+            <label class="type-label" for="t-repair"><span class="type-icon">🔧</span>Repair</label>
+          </div>
+          <div>
+            <input type="radio" name="recordType" id="t-maintenance" value="Maintenance" class="type-option">
+            <label class="type-label" for="t-maintenance"><span class="type-icon">🛢️</span>Maintenance</label>
+          </div>
+          <div>
+            <input type="radio" name="recordType" id="t-accident" value="Accident" class="type-option">
+            <label class="type-label" for="t-accident"><span class="type-icon">💥</span>Accident</label>
+          </div>
+          <div>
+            <input type="radio" name="recordType" id="t-inspection" value="Inspection" class="type-option">
+            <label class="type-label" for="t-inspection"><span class="type-icon">✅</span>Inspection</label>
+          </div>
+          <div>
+            <input type="radio" name="recordType" id="t-part" value="Part Replacement" class="type-option">
+            <label class="type-label" for="t-part"><span class="type-icon">🔩</span>Part Replacement</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label class="form-label" for="description">Description <span style="color:var(--danger);">*</span></label>
+        <textarea class="form-control" id="description" rows="4"
+          placeholder="Describe the intervention in detail (minimum 10 characters)&#10;Example: Full oil change with synthetic 5W-30, replaced oil filter and air filter."
+          maxlength="500"></textarea>
+        <div class="char-counter"><span id="descCount">0</span> / 500</div>
+      </div>
+
+      <!-- Mileage + Parts row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div class="form-group">
+          <label class="form-label" for="mileage">Current Mileage <span style="color:var(--danger);">*</span></label>
+          <input type="text" class="form-control" id="mileage" placeholder="e.g. 52000 km">
+          <div class="form-hint">Vehicle mileage at time of intervention</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="partDetails">Parts Used <span style="color:var(--muted);font-weight:400;">(optional)</span></label>
+          <input type="text" class="form-control" id="partDetails"
+            placeholder="e.g. Bosch BP-1234 Front Brake Pads">
+          <div class="form-hint">Brand, reference, and type of parts replaced</div>
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div style="display:flex;gap:12px;">
+        <button class="btn btn-primary" id="submitBtn" style="flex:1;padding:15px;">
+          <span id="submitText">Submit Record to Blockchain</span>
+        </button>
+        <button class="btn btn-outline" onclick="resetForm()" style="padding:15px 24px;">Reset</button>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div class="result-card" id="resultCard">
+      <div class="result-icon" id="resultIcon">✅</div>
+      <div class="result-title" id="resultTitle"></div>
+      <div id="resultBody"></div>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:20px;">
+        <button class="btn btn-outline" onclick="resetForm()">Add Another Record</button>
+        <a class="btn btn-primary" id="resultViewBtn" href="#" target="_blank">View Vehicle →</a>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.11.1/dist/ethers.umd.min.js"></script>
+<script src="/js/contract-address.js"></script>
+<script src="/js/blockchain.js"></script>
+<script src="/js/admin-record.js"></script>
+</body>
+</html>

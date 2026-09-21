@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CarTrace: Blockchain Vehicle History</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    /* ── Hero ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 100px 24px 60px;
+      position: relative;
+      overflow: hidden;
+      background: 
+        linear-gradient(160deg, rgba(4,12,24,0.92) 0%, rgba(4,12,24,0.70) 60%, rgba(4,12,24,0.95) 100%),
+        /*url('https://images.unsplash.com/photo-1544636331-e26879cd4d9b?w=1920&q=80') center/cover no-repeat fixed;*/
+        url('/wallpaper.jpg') center/cover no-repeat fixed;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 40% at 50% 60%, rgba(0,212,255,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-label {
+      font-family: var(--font-head);
+      font-size: 13px;
+      letter-spacing: 5px;
+      color: var(--cyan);
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      opacity: 0;
+      animation: fadeInUp 0.6s ease 0.2s forwards;
+    }
+    .hero-title {
+      font-family: var(--font-head);
+      font-size: clamp(32px, 6vw, 68px);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: 3px;
+      margin-bottom: 20px;
+      opacity: 0;
+      animation: fadeInUp 0.6s ease 0.4s forwards;
+    }
+    .hero-title span { color: var(--cyan); }
+    /* .hero-sub {
+      font-size: 17px;
+      color: var(--muted);
+      max-width: 520px;
+      margin: 0 auto 48px;
+      line-height: 1.7;
+      opacity: 0;
+      animation: fadeInUp 0.6s ease 0.6s forwards;
+    } */
+
+    .hero-sub {
+    font-size: 17px;
+    color: #B8F0FF;
+    max-width: 520px;
+    margin: 0 auto 48px;
+    line-height: 1.7;
+    opacity: 0;
+    animation: fadeInUp 0.6s ease 0.6s forwards;
+    }
+
+    /* ── Search box ── */
+    .search-wrap {
+      width: 100%;
+      max-width: 640px;
+      margin: 0 auto;
+      opacity: 0;
+      animation: fadeInUp 0.6s ease 0.8s forwards;
+    }
+    .search-box {
+      display: flex;
+      gap: 0;
+      background: rgba(7, 21, 37, 0.9);
+      border: 1.5px solid var(--border-hi);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(0,212,255,0.12);
+      backdrop-filter: blur(10px);
+      transition: box-shadow 0.3s;
+    }
+    .search-box:focus-within {
+      box-shadow: 0 0 60px rgba(0,212,255,0.2);
+      border-color: var(--cyan);
+    }
+    .search-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--white);
+      font-family: var(--font-head);
+      font-size: 14px;
+      letter-spacing: 3px;
+      padding: 18px 24px;
+      outline: none;
+      text-transform: uppercase;
+    }
+    .search-input::placeholder { color: var(--muted); letter-spacing: 2px; font-size: 12px; }
+    .search-btn {
+      background: var(--cyan);
+      border: none;
+      padding: 0 32px;
+      cursor: pointer;
+      font-family: var(--font-head);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #040c18;
+      text-transform: uppercase;
+      transition: background 0.2s, box-shadow 0.2s;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .search-btn:hover { background: #33ddff; box-shadow: 0 0 30px rgba(0,212,255,0.3); }
+
+    /* ── Proof badges ── */
+    .proof-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 32px;
+      opacity: 0;
+      animation: fadeInUp 0.6s ease 1s forwards;
+    }
+    .proof-badge {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 15px;
+      color: #FF2D9B;
+      font-family: var(--font-head);
+      letter-spacing: 1px;
+    }
+    .proof-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: #FF2D9B; }
+
+    /* ── Stats bar ── */
+    .stats-section {
+      padding: 40px 24px;
+      background: linear-gradient(to bottom, var(--bg-card), var(--bg));
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      max-width: 800px;
+      margin: 0 auto;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+    }
+    .stats-grid .stat-card {
+      border-radius: 0;
+      border: none;
+    }
+
+    /* ── How it works ── */
+    .section { padding: 80px 24px; max-width: 1100px; margin: 0 auto; }
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 48px;
+    }
+    .step-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 32px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+    .step-card:hover { border-color: var(--border-hi); transform: translateY(-4px); }
+    .step-number {
+      font-family: var(--font-head);
+      font-size: 56px;
+      font-weight: 900;
+      color: rgba(0,212,255,0.08);
+      position: absolute;
+      top: 12px; right: 20px;
+      line-height: 1;
+    }
+    .step-icon { font-size: 28px; margin-bottom: 16px; }
+    .step-title { font-family: var(--font-head); font-size: 13px; font-weight: 600; letter-spacing: 1px; margin-bottom: 10px; }
+    .step-desc { color: var(--muted); font-size: 14px; line-height: 1.7; }
+
+    /* ── Partners ── */
+    .partners-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-top: 48px;
+    }
+    .partner-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 28px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+      display: block;
+    }
+    .partner-card:hover {
+      border-color: var(--border-hi);
+      background: var(--bg-elev);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+    }
+    .partner-icon { font-size: 32px; margin-bottom: 14px; }
+    .partner-name { font-family: var(--font-head); font-size: 12px; letter-spacing: 1px; margin-bottom: 8px; }
+    .partner-desc { color: var(--muted); font-size: 13px; }
+
+    /* ── CTA ── */
+    .cta-section {
+      text-align: center;
+      padding: 80px 24px;
+      background: linear-gradient(to bottom, var(--bg), var(--bg-card));
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Footer ── */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .footer-logo { font-family: var(--font-head); font-size: 14px; color: var(--white); letter-spacing: 2px; }
+
+    @media (max-width: 768px) {
+      .steps-grid, .partners-grid { grid-template-columns: 1fr 1fr; }
+      .stats-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+      .steps-grid, .partners-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <a href="/" class="navbar-logo">
+    <span class="logo-dot"></span>
+    CarTrace
+  </a>
+  <div class="navbar-links">
+    <a href="#how-it-works">How It Works</a>
+    <a href="#partners">For Partners</a>
+    <a href="/admin/login.html" class="nav-admin-btn">Admin Portal</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-label">Blockchain Vehicle History Platform</div>
+  <h1 class="hero-title">The Truth About<br><span>Every Vehicle</span></h1>
+  <p class="hero-sub">Immutable maintenance history secured by blockchain. Verify any vehicle before you buy.</p>
+
+  <div class="search-wrap">
+    <div class="search-box scan-wrap">
+      <input type="text" class="search-input" id="vinInput"
+        placeholder="Enter VIN number (e.g. WVWZZZ1JZ3W386752)"
+        maxlength="17" autocomplete="off" spellcheck="false">
+      <button class="search-btn" id="searchBtn">
+        <span>Search</span>
+        <span>→</span>
+      </button>
+    </div>
+    <div id="searchError" style="color:var(--danger);font-size:12px;margin-top:8px;min-height:18px;text-align:center;font-family:var(--font-head);letter-spacing:1px;"></div>
+  </div>
+
+  <div class="proof-badges">
+    <div class="proof-badge"><span class="dot"></span> Tamper-proof</div>
+    <div class="proof-badge"><span class="dot"></span> 100% Transparent</div>
+    <div class="proof-badge"><span class="dot"></span> Instant Access</div>
+    <div class="proof-badge"><span class="dot"></span> Decentralized</div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats-section">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value" id="stat-vehicles">—</div>
+      <div class="stat-label">Vehicles Registered</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" id="stat-records">—</div>
+      <div class="stat-label">Records on Blockchain</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">3</div>
+      <div class="stat-label">Partner Organizations</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how-it-works">
+  <div style="text-align:center;">
+    <div class="section-label">Process</div>
+    <h2 class="section-title">How It Works</h2>
+    <p class="section-subtitle">Three steps from intervention to permanent record</p>
+  </div>
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-number">01</div>
+      <div class="step-icon">🔧</div>
+      <div class="step-title">Professional Logs Event</div>
+      <p class="step-desc">An authorized garage, inspection center, or OEM logs every intervention — repairs, maintenance, accidents, or part replacements — into cartrace.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">02</div>
+      <div class="step-icon">⛓️</div>
+      <div class="step-title">Blockchain Secures Data</div>
+      <p class="step-desc">Each record is signed with the professional's cryptographic wallet and permanently written to the blockchain. It cannot be edited or deleted by anyone.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-number">03</div>
+      <div class="step-icon">🔍</div>
+      <div class="step-title">Buyer Verifies History</div>
+      <p class="step-desc">Any buyer can search a VIN for free with no account needed, and instantly see the vehicle's complete, verified history — including a trust score.</p>
+    </div>
+  </div>
+</section>
+
+<!-- PARTNERS -->
+<section class="section" id="partners" style="padding-top:0;">
+  <div style="text-align:center;">
+    <div class="section-label">Ecosystem</div>
+    <h2 class="section-title">Who Uses CarTrace</h2>
+    <p class="section-subtitle">Trusted by professionals across the automotive industry</p>
+  </div>
+  <div class="partners-grid">
+    <div class="partner-card">
+      <div class="partner-icon">🔧</div>
+      <div class="partner-name">Garages</div>
+      <p class="partner-desc">Log every repair and maintenance with permanent proof of work</p>
+    </div>
+    <div class="partner-card">
+      <div class="partner-icon">✅</div>
+      <div class="partner-name">Inspection Centers</div>
+      <p class="partner-desc">Issue tamper-proof technical inspection certificates on-chain</p>
+    </div>
+    <div class="partner-card">
+      <div class="partner-icon">🏭</div>
+      <div class="partner-name">Manufacturers</div>
+      <p class="partner-desc">Register vehicles at production with verified factory data</p>
+    </div>
+    <div class="partner-card">
+      <div class="partner-icon">🤝</div>
+      <div class="partner-name">Dealerships</div>
+      <p class="partner-desc">Build trust with buyers by providing transparent vehicle history</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="section-label">Get Started</div>
+  <h2 class="section-title" style="margin-bottom:16px;">Ready to Verify a Vehicle?</h2>
+  <p class="section-subtitle" style="margin-bottom:32px;">Enter a VIN above — no account, no wallet, completely free.</p>
+  <a href="/admin/login.html" class="btn btn-outline">Admin Portal →</a>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-logo">CarTrace</div>
+  <div>Academic Blockchain Project · Built with Solidity + Hardhat + ethers.js</div>
+</footer>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.11.1/dist/ethers.umd.min.js"></script>
+<script src="/js/contract-address.js"></script>
+<script src="/js/blockchain.js"></script>
+<script src="/js/index.js"></script>
+</body>
+</html>
